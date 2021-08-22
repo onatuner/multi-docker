@@ -1,0 +1,21 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t onatuner/react-test -f./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true onatuner/react-test npm test
+
+after_success:
+  - docker build -t onatuner/multi-client ./client
+  - docker build -t onatuner/multi-nginx ./nginx
+  - docker build -t onatuner/multi-server ./server
+  - docker build -t onatuner/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push onatuner/multi-client
+  - docker push onatuner/multi-nginx
+  - docker push onatuner/multi-server
+  - docker push onatuner/multi-worker
